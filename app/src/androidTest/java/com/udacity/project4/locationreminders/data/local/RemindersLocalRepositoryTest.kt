@@ -20,7 +20,6 @@ import org.junit.runner.RunWith
 @MediumTest
 class RemindersLocalRepositoryTest {
 
-
     // Class under test
     private lateinit var remindersDatabase: RemindersDatabase
     private lateinit var remindersDAO: RemindersDao
