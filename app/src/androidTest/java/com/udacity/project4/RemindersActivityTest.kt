@@ -1,9 +1,16 @@
 package com.udacity.project4
 
 import android.app.Application
+import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
@@ -11,6 +18,7 @@ import com.udacity.project4.locationreminders.reminderslist.RemindersListViewMod
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
@@ -65,7 +73,18 @@ class RemindersActivityTest :
         }
     }
 
+    @Test
+    fun remindersScreen_clickOnFab_opensSaveReminderScreen() = runBlocking {
+        // start the reminders screen
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
 
-//    TODO: add End to End testing to the app
+        // click on the FAB add reminder
+        onView(withId(R.id.addReminderFAB)).perform(click())
 
+        // check that we are on the SaveReminder screen
+        onView(withId(R.id.reminderTitle)).check(matches(isDisplayed()))
+
+        // Make sure the activity is closed before resetting the db:
+        activityScenario.close()
+    }
 }
