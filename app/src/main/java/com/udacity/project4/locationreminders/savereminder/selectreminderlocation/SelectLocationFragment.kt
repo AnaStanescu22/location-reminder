@@ -5,10 +5,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.maps.GoogleMap
@@ -30,7 +33,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var map: GoogleMap
-    private lateinit var selectedLocation: LatLng
+    private var selectedLocation: LatLng = LatLng(-33.852, 151.211)
     private var selectedLocationDescription: String? = null
     private lateinit var binding: FragmentSelectLocationBinding
 
@@ -64,6 +67,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         _viewModel.navigationCommand.value = NavigationCommand.Back
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
@@ -92,9 +96,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             )
 
             selectedLocation = latLng
-            selectedLocationDescription = String.format(
-                getString(R.string.lat_long_snippet), latLng.latitude, latLng.longitude
-            )
+            selectedLocationDescription = "Custom location"
         }
     }
 
@@ -106,6 +108,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .title(poi.name)
             )
             poiMarker?.showInfoWindow()
+            selectedLocation = poi.latLng
+            selectedLocationDescription = poiMarker?.title
         }
     }
 
@@ -134,41 +138,52 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
         if (isPermissionGranted()) {
             map.isMyLocationEnabled = true
+            Toast.makeText(context, "Location permission is granted.", Toast.LENGTH_SHORT).show()
         } else {
-            launchPermissionDialog()
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        launchPermissionDialog()
-    }
-
+    @RequiresApi(Build.VERSION_CODES.Q)
     val requestPermissionLauncher =
         registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (isGranted) {
-                Log.i("Permission: ", "Granted")
-            } else {
-                Log.i("Permission: ", "Denied")
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            when {
+                permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                    enableMyLocation()
+                }
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                    enableMyLocation()
+                }
+
+                else -> {
+                    Log.i("Permission: ", "Denied")
+                    Toast.makeText(
+                        context,
+                        "Location permission was not granted.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
 
-    fun launchPermissionDialog() {
-        requestPermissionLauncher.launch(
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    }
-
+    @Deprecated("Deprecated in Java")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.map_options, menu)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.normal_map -> {
             map.mapType = GoogleMap.MAP_TYPE_NORMAL

@@ -5,8 +5,9 @@ import androidx.test.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.data.dto.Result
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
@@ -44,7 +45,7 @@ class RemindersLocalRepositoryTest {
     fun closeDb() = remindersDatabase.close()
 
     @Test
-    fun insertThreeReminders_getAllThreeFromDatabase() = runBlockingTest {
+    fun insertThreeReminders_getAllThreeFromDatabase() = runBlocking {
         // GIVEN - insert three reminders in the database
         val reminder1 = ReminderDTO(
             "title1",
@@ -78,8 +79,10 @@ class RemindersLocalRepositoryTest {
         // WHEN - Get all the reminders from the database
         val loadedRemindersList = remindersDatabase.reminderDao().getReminders()
         val sortedLoadedRemindersList = loadedRemindersList.sortedBy { it.id }
+        val reminder = repository.getReminder("fake") as Result.Error
 
         // THEN - The loaded data contains the expected values
+        assertThat(reminder.message, `is`("Reminder not found!"))
         assertThat(sortedLoadedRemindersList[0].id, `is`(remindersList[0].id))
         assertThat(sortedLoadedRemindersList[1].id, `is`(remindersList[1].id))
         assertThat(sortedLoadedRemindersList[2].id, `is`(remindersList[2].id))

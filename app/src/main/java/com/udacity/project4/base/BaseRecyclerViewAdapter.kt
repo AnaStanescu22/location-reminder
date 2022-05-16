@@ -67,4 +67,3 @@ abstract class BaseRecyclerViewAdapter<T>(private val callback: ((item: T) -> Un
         return null
     }
 }
-
