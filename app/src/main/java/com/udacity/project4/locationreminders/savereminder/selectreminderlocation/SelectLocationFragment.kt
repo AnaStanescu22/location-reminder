@@ -54,17 +54,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         binding.saveReminderLocationButton.setOnClickListener {
-            onLocationSelected()
+            _viewModel.onLocationSelected(selectedLocation,selectedLocationDescription)
         }
 
         return binding.root
-    }
-
-    private fun onLocationSelected() {
-        _viewModel.latitude.value = selectedLocation.latitude
-        _viewModel.longitude.value = selectedLocation.longitude
-        _viewModel.reminderSelectedLocationStr.value = selectedLocationDescription
-        _viewModel.navigationCommand.value = NavigationCommand.Back
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
